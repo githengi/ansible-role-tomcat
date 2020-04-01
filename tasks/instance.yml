@@ -27,6 +27,8 @@
   register: tomcat_download_tomcat_source
   until: tomcat_download_tomcat_source is succeeded
   retries: 3
+  become: yes
+  become_user: {{ instance.user }}
 
 - name: install tomcat instance
   unarchive:
@@ -40,6 +42,8 @@
   register: install_tomcat
   until: install_tomcat is succeeded
   retries: 3
+  become: yes
+  become_user: {{ instance.user }}
 
 - name: save instance name
   set_fact:
@@ -51,6 +55,8 @@
     dest: "{{ tomcat_directory }}/{{ instance.name }}/conf/server.xml"
   notify:
     - restart tomcat instance
+  become: yes
+  become_user: {{ instance.user }}
 
 - name: configure tomcat instance - setenv.sh
   template:
@@ -60,8 +66,13 @@
     - (instance.java_opts is defined) or (instance.xms is defined) or (instance.xmx is defined)
   notify:
     - restart tomcat instance
+  become: yes
+  become_user: {{ instance.user }}
+  
 
 - name: create service instance
+  become: yes
+  become_user: root
   import_role:
     name: robertdebock.service
   vars:
@@ -77,6 +88,8 @@
     name: "{{ instance.name }}"
     state: started
     enabled: yes
+  become: yes
+  become_user: root
 
 - name: loop over wars
   include: war.yml
